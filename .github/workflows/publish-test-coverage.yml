@@ -2,10 +2,6 @@ name: Publish-Test-Coverage
 
 on:
   workflow_call:
-    inputs:
-      REPOSITORY_NAME:
-        required: true
-        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -18,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download coverage results
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
-          name: ${{inputs.REPOSITORY_NAME}}-coverage-results
+          name: test-report
           path: artifacts/coverage-results
 
       - name: Configure AWS Credentials
@@ -31,4 +27,4 @@ jobs:
           aws-region: eu-central-1
 
       - name: Deploy static site to S3 bucket
-        run: aws s3 sync artifacts/coverage-results s3://moryx-code-coverage/${{inputs.REPOSITORY_NAME}}/${GITHUB_REF#refs/heads/} --delete
+        run: aws s3 sync artifacts/coverage-results s3://moryx-code-coverage/${{ github.event.repository.name }}/${GITHUB_REF#refs/heads/} --delete

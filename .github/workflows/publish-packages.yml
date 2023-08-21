@@ -1,0 +1,100 @@
+name: Publish Packages
+
+on:
+  workflow_call:
+    inputs:
+      dotnet_sdk_version:
+        required: true
+        type: string
+      npm_package_source:
+        required: false
+        type: string
+      nuget_package_target:
+        required: true
+        type: string
+      nuget_package_target_v3:
+        required: false
+        type: string
+      artifacts_dir:
+        required: false
+        type: string
+        default: ""
+    secrets:
+      npm_auth_token:
+        required: false
+      myget_auth_token:
+        required: false
+      myget_user:
+        required: false
+      myget_pass:
+        required: false
+
+jobs:
+  Publish:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: publish
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        id: cache-nuget
+        with:
+          path:  ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: 🔧 Setup nuget
+        uses: nuget/setup-nuget@v1
+
+      - name: 🔧 Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet_sdk_version }}
+      
+      - name: 🗝️ Authenticate npm registry
+        run: npm config set ${{ inputs.npm_package_source }}:_authToken ${{ secrets.npm_auth_token }}
+        if: inputs.npm_package_source != ''
+
+      - name: 🗝️ Authenticate MyGet
+        uses: moryx-industry/nuget-setapikey@v1
+        with:
+          sources-file: './myget.feeds'
+          api-key: ${{ secrets.myget_auth_token }}
+          registry-user: ${{ secrets.myget_user }}
+          registry-pass: ${{ secrets.myget_pass }}
+
+
+
+      - name: ⬇️ Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: artifacts/build
+
+      - name: ⬇️ Download licensed artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: licensing
+
+      - name: Unzip licensed artifacts
+        run: 7z x -o${{ inputs.artifacts_dir == '' && 'artifacts/Licensing/' || inputs.artifacts_dir }} licensing.zip
+
+      - name: ♺ Execute nuget restore
+        run: nuget restore
+          
+      - name: 🧰 Setup BuildToolkit
+        uses: moryx-industry/setup-buildtoolkit@v1        
+      
+      - name: 📦 Create Packages and 🚚 deliver
+        run: |
+          .\set-version.ps1 -RefName ${{ github.ref_name }} -IsTag ${{ github.ref_type == 'tag' && 1 || 0 }} -BuildNumber ${{ github.run_number }} -CommitHash ${{ github.sha }}
+          .\pack-publish.ps1 -NugetApiKey ${{ secrets.myget_auth_token }} -PackageTarget ${{ inputs.nuget_package_target }}
+        shell: pwsh
+
+      - name: ⬆️ Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: artifacts/packages/
