@@ -1,4 +1,4 @@
-name: UnitTests
+name: Tests
 
 on:
   workflow_call:
@@ -9,6 +9,18 @@ on:
       npm_package_source:
         required: false
         type: string
+      filter:
+        required: false
+        type: string
+        default: '*.Tests.csproj'
+      setup_node:
+        required: false
+        type: boolean
+        default: true
+      node_version:
+        required: false
+        type: string
+        default: '20'
     secrets:
       npm_auth_token:
         required: false
@@ -20,36 +32,39 @@ on:
         required: false
 
 jobs:
-  UnitTests:
+  Tests:
     runs-on: ubuntu-latest
-    concurrency:
-      group: test-stage
-      cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/cache@v3
-        id: cache-nuget
+      # - uses: actions/cache@v4
+      #   id: cache-nuget
+      #   with:
+      #     path:  ${{ github.workspace }}/.nuget/packages
+      #     key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-nuget-
+
+      - name: 🔧 Setup Node
+        uses: actions/setup-node@v4
         with:
-          path:  ${{ github.workspace }}/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: 🔧 Setup nuget
-        uses: nuget/setup-nuget@v1
+          node-version: ${{ inputs.node_version }}
+        if: ${{ inputs.setup_node == true }}
 
       - name: 🔧 Setup .NET SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ inputs.dotnet_sdk_version }}
+
+      - name: 🔧 Setup nuget
+        uses: nuget/setup-nuget@v2
 
       - name: 🗝️ Authenticate npm registry
         run: npm config set ${{ inputs.npm_package_source }}:_authToken ${{ secrets.npm_auth_token }}
         if: inputs.npm_package_source != ''
 
       - name: "🗝️ Authenticate MyGet"
-        uses: moryx-industry/nuget-setapikey@main
+        uses: moryx-industry/nuget-setapikey@v1
         with:
           sources-file: './myget.feeds'
           api-key: ${{ secrets.myget_auth_token }}
@@ -58,17 +73,17 @@ jobs:
 
       - name: ♺ Execute nuget restore
         run: nuget restore
-          
-      - name: 🧰 Setup BuildToolkit
-        uses: moryx-industry/setup-buildtoolkit@main
 
-      - name: 🧪 Run tests 
+      - name: 🧰 Setup BuildToolkit
+        uses: moryx-industry/setup-buildtoolkit@v1
+
+      - name: 🧪 Run tests
         run: |
-          .\unit-tests.ps1
+          .\run-tests.ps1 -SearchFilter ${{ inputs.filter }}
         shell: pwsh
 
       - name: ⬆️ Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: src/Tests/**/TestResults/**/coverage.cobertura.xml

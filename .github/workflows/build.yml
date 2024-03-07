@@ -74,7 +74,7 @@ jobs:
         if: inputs.NPM_PACKAGE_SOURCE != ''
 
       - name: "🗝️ Authenticate MyGet"
-        uses: moryx-industry/nuget-setapikey@main
+        uses: moryx-industry/nuget-setapikey@v1
         with:
           sources-file: './myget.feeds'
           api-key: ${{ secrets.myget_auth_token }}
