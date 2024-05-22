@@ -1,0 +1,91 @@
+name: Tests
+
+on:
+  workflow_call:
+    inputs:
+      dotnet_sdk_version:
+        required: true
+        type: string
+      npm_package_source:
+        required: false
+        type: string
+      filter:
+        required: false
+        type: string
+        default: '*.Tests.csproj'
+      setup_node:
+        required: false
+        type: boolean
+        default: true
+      node_version:
+        required: false
+        type: string
+        default: '20'
+    secrets:
+      npm_auth_token:
+        required: false
+      myget_auth_token:
+        required: false
+      myget_user:
+        required: false
+      myget_pass:
+        required: false
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # - uses: actions/cache@v4
+      #   id: cache-nuget
+      #   with:
+      #     path:  ${{ github.workspace }}/.nuget/packages
+      #     key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-nuget-
+
+      - name: 🔧 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+        if: ${{ inputs.setup_node == true }}
+
+      - name: 🔧 Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet_sdk_version }}
+
+      - name: 🔧 Setup nuget
+        uses: nuget/setup-nuget@v2
+
+      - name: 🗝️ Authenticate npm registry
+        run: npm config set ${{ inputs.npm_package_source }}:_authToken ${{ secrets.npm_auth_token }}
+        if: inputs.npm_package_source != ''
+
+      - name: "🗝️ Authenticate MyGet"
+        uses: moryx-industry/nuget-setapikey@v1
+        with:
+          sources-file: './myget.feeds'
+          api-key: ${{ secrets.myget_auth_token }}
+          registry-user: ${{ secrets.myget_user }}
+          registry-pass: ${{ secrets.myget_pass }}
+
+      - name: ♺ Execute nuget restore
+        run: nuget restore
+
+      - name: 🧰 Setup BuildToolkit
+        uses: moryx-industry/setup-buildtoolkit@v1
+
+      - name: 🧪 Run tests
+        run: |
+          .\run-tests.ps1 -SearchFilter ${{ inputs.filter }}
+        shell: pwsh
+
+      - name: ⬆️ Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: src/Tests/**/TestResults/**/coverage.cobertura.xml
+          retention-days: 1
+          if-no-files-found: error

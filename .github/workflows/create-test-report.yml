@@ -1,23 +1,19 @@
 name: ReportGenerator
 
 on:
-  workflow_call:
-    inputs:
-      REPOSITORY_NAME:
-        required: true
-        type: string
+  workflow_call
 
 jobs:
   ReportGenerator:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code 
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       
       - name: Download test results
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
-          name: ${{inputs.REPOSITORY_NAME}}-test-results
+          name: test-results
           path: artifacts/test-results
           
       - name: ReportGenerator
@@ -28,8 +24,8 @@ jobs:
           reporttypes: Html
           
       - name: Upload test results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{inputs.REPOSITORY_NAME}}-coverage-results
+          name: test-report
           path: Coverage/
           retention-days: 1
