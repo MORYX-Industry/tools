@@ -4,45 +4,98 @@
     <a href="https://stackoverflow.com/questions/tagged/moryx">
         <img src="https://img.shields.io/badge/stackoverflow-ask-orange.svg" alt="Stackoverflow">
     </a>
-    <a href="https://gitter.im/PHOENIXCONTACT/MORYX?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge">
-        <img src="https://badges.gitter.im/PHOENIXCONTACT/MORYX.svg" alt="Gitter">
-    </a>
 </p>
 
 ## Overview
-This repo contains GitHub Actions, Workflows and other tools that the MORYX team uses to maintain quality.
-</br>
-Currently including:
 
-- GitHub reusable workflows: *.github/workflows/*
-- Landing Page for the [MORYX-CodeCoverage-Website](https://d2g620u22bjjnb.cloudfront.net/): *src/CodeCoverage-Pages/*
-- Action to sync Landing Page to AWS Server (in progress)
+This repo contains reusable GitHub workflows, used by the MORYX team to maintain 
+our CI pipelines.
 
-## Adding the workflow to MOYRX-Repositories
+## Example
 
-The current standard workflow in MORYX-Repositories includes:
+```yml
+jobs:
+  Variables:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Release variables 
+        id: set-variables
+        run: echo ''
+    outputs:
+      dotnet_sdk_version: 6
+      PACKAGE_TARGET: <nuget-package-feed>
+      PACKAGE_TARGET_V3: <nuget-package-feed/v3>
+      NPM_PACKAGE_SOURCE: <npm-package-source>
 
-- Buildung the solution and package it
-- Unit-Testing with coverage information collection
-- Integration-Testing with coverage information collection
-- Generating a coverage report via ReportGenerator
-- Syncing coverage html-pages to AWS-S3-Bucket
-- Documentation
-- Publishing built packages to Myget or Nuget
+  Build:
+    needs: [Variables]
+    uses: moryx-industry/tools/.github/workflows/build.yml@v1
+    with:
+      dotnet_sdk_version: ${{ needs.Variables.outputs.dotnet_sdk_version }}
+      NPM_PACKAGE_SOURCE: ${{ needs.Variables.outputs.NPM_PACKAGE_SOURCE }}
+    secrets:
+      npm_auth_token: ${{ secrets.MYGET_TOKEN }}
+      myget_auth_token: ${{ secrets.MYGET_TOKEN }}
+      myget_user: ${{ secrets.MYGET_USER }}
+      myget_pass: ${{ secrets.MYGET_PASS }}
 
-To add this workflow to your MORYX-Repository, follow these steps:
+  Tests:
+    needs: [Variables, Build]
+    uses: moryx-industry/tools/.github/workflows/run-unit-tests.yml@v1
+    with:
+      dotnet_sdk_version: ${{ needs.Variables.outputs.dotnet_sdk_version }}
+      npm_package_source: ${{ needs.Variables.outputs.NPM_PACKAGE_SOURCE }}
+    secrets:
+      npm_auth_token: ${{ secrets.MYGET_TOKEN }}
+      myget_auth_token: ${{ secrets.MYGET_TOKEN }}
+      myget_user: ${{ secrets.MYGET_USER }}
+      myget_pass: ${{ secrets.MYGET_PASS }}
 
- 1. Add the nuget-package "coverlet.collector" to your test-projects and also add a package-reference with version to *Directory.build.targets*.
- 2. Make sure, you have the *.build*-directory with all its content.
- 3. Add the needed secrets to your repository: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, MYGET_TOKEN, NUGET_TOKEN.
- 4. Add the *build-and-test-tool.yml* as *build-and-test.yml* to your repository to *.github/workflows/* in your repository.
+  Licensing:
+    needs: [Tests]
+    uses: moryx-industry/tools/.github/workflows/licensing.yml@v1
 
-For reference, the workflow is currently in use in the follwing repositories: [MORYX-Framework](https://github.com/PHOENIXCONTACT/MORYX-Framework) and [MORYX-Factory](https://github.com/PHOENIXCONTACT/MORYX-Factory).
+  create-report:
+    needs: [Licensing]
+    concurrency:
+      group: publish
+    uses: moryx-industry/tools/.github/workflows/create-test-report.yml@v1
+                
+  publish-reports:
+    needs: [create-report]
+    concurrency:
+      group: publish
+    uses: moryx-industry/tools/.github/workflows/publish-test-coverage.yml@v1
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-### Adding the repository coverage results to the MORYX-CodeCoverage-Website
-
-To add the information gathered in the workflow to be shown on the MORYX-CodeCoverage-Website in *src/CodeCoverage-Pages/*, please add the html-code and JavaScript according to the comments in the files, respectively.
+  Publish-Packages:
+    needs: [Variables, Licensing]
+    uses: moryx-industry/tools/.github/workflows/publish-packages.yml@v1
+    with:
+      dotnet_sdk_version: ${{ needs.Variables.outputs.dotnet_sdk_version }}
+      npm_package_source: ${{ needs.Variables.outputs.NPM_PACKAGE_SOURCE }}
+      nuget_package_target: ${{ needs.Variables.outputs.PACKAGE_TARGET }}
+      nuget_package_target_v3: ${{ needs.Variables.outputs.PACKAGE_TARGET_V3 }}
+    secrets:
+      npm_auth_token: ${{ secrets.MYGET_TOKEN }}
+      myget_auth_token: ${{ secrets.MYGET_TOKEN }}
+      myget_user: ${{ secrets.MYGET_USER }}
+      myget_pass: ${{ secrets.MYGET_PASS }}
+    if: |
+      ${{ github.ref_name }} == 'dev' ||
+      ${{ github.ref_name }} == 'future' ||
+      ${{ (startsWith(github.ref, 'refs/tags/v')) }}
+       
+```
 
 ## Contribute
 
-If you have an idea to improve a template or can think of a new useful template, please make your changes based on one of the template branches and open a pull request. If you want to add a template, extend the branch list in one commit and the template definition in another. This way we can easily put your template into a separate branch. **Note:** All branches except *master* will be rebased regularly, to keep grafting them easy. To avoid losing previous merge request information, all branch merge requests are merged by rebase squashing.
+If you have an idea to improve a template or can think of a new useful template,
+please make your changes based on one of the template branches and open a pull
+request. If you want to add a template, extend the branch list in one commit and
+the template definition in another. This way we can easily put your template
+into a separate branch. **Note:** All branches except *master* will be rebased
+regularly, to keep grafting them easy. To avoid losing previous merge request
+information, all branch merge requests are merged by rebase squashing.
