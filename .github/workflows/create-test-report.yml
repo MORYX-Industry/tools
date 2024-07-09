@@ -10,6 +10,11 @@ jobs:
       - name: Checkout code 
         uses: actions/checkout@v4
       
+      - name: 🔧 Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json 
+
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
