@@ -16,7 +16,7 @@ jobs:
           path: artifacts/build/
      
       - name: 🧰 Setup BuildToolkit
-        uses: moryx-industry/setup-buildtoolkit@v1
+        uses: moryx-industry/setup-buildtoolkit@fix/pack-artifacts
 
       - name: 🔑 Licensing
         run: |

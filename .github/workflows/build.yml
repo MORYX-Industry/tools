@@ -86,7 +86,7 @@ jobs:
         if: steps.cache-nuget.outputs.cache-hit != 'true'
 
       - name: 🧰 Setup BuildToolkit
-        uses: moryx-industry/setup-buildtoolkit@v1
+        uses: moryx-industry/setup-buildtoolkit@fix/pack-artifacts
 
       - name: 🔨 Execute dotnet build
         run: |

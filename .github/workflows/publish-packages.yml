@@ -91,7 +91,7 @@ jobs:
         run: nuget restore
           
       - name: 🧰 Setup BuildToolkit
-        uses: moryx-industry/setup-buildtoolkit@v1        
+        uses: moryx-industry/setup-buildtoolkit@fix/pack-artifacts
       
       - name: 📦 Create Packages and 🚚 deliver
         run: |
