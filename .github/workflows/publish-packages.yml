@@ -71,8 +71,6 @@ jobs:
           registry-user: ${{ secrets.myget_user }}
           registry-pass: ${{ secrets.myget_pass }}
 
-
-
       - name: ⬇️ Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -86,9 +84,6 @@ jobs:
 
       - name: Unzip licensed artifacts
         run: 7z x -o${{ inputs.artifacts_dir == '' && 'artifacts/Licensing/' || inputs.artifacts_dir }} licensing.zip
-
-      - name: ♺ Execute nuget restore
-        run: nuget restore
           
       - name: 🧰 Setup BuildToolkit
         uses: moryx-industry/setup-buildtoolkit@v1        
