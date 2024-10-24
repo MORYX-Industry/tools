@@ -81,8 +81,8 @@ jobs:
           registry-user: ${{ secrets.myget_user }}
           registry-pass: ${{ secrets.myget_pass }}
 
-      - name: ♺ Execute dotnet restore
-        run: dotnet restore
+      - name: ♺ Execute nuget restore
+        run: nuget restore
         if: steps.cache-nuget.outputs.cache-hit != 'true'
 
       - name: 🧰 Setup BuildToolkit

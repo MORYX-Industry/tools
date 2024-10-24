@@ -55,7 +55,7 @@ jobs:
           dotnet-version: ${{ inputs.dotnet_sdk_version }}
 
       - name: 🔧 Setup nuget
-        uses: nuget/setup-nuget@v2
+        uses: nuget/setup-nuget@v1
 
       - name: 🗝️ Authenticate npm registry
         run: npm config set ${{ inputs.npm_package_source }}:_authToken ${{ secrets.npm_auth_token }}
@@ -69,8 +69,8 @@ jobs:
           registry-user: ${{ secrets.myget_user }}
           registry-pass: ${{ secrets.myget_pass }}
 
-      - name: ♺ Execute dotnet restore
-        run: dotnet restore
+      - name: ♺ Execute nuget restore
+        run: nuget restore
 
       - name: 🧰 Setup BuildToolkit
         uses: moryx-industry/setup-buildtoolkit@v1
