@@ -45,6 +45,7 @@ jobs:
 
       - name: Debug
         run: |
+          tree artifacts
           tree src/Moryx.Products.Web -I 'node_modules'
           tree src/Moryx.Resources.Web -I 'node_modules'
 
@@ -118,6 +119,7 @@ jobs:
 
       - name: Debug
         run: |
+          tree artifacts
           tree src/Moryx.Products.Web -I 'node_modules'
           tree src/Moryx.Resources.Web -I 'node_modules'
       
