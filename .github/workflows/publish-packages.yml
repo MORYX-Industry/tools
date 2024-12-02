@@ -43,11 +43,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Debug
-        run: |
-          tree src/Moryx.Products.Web -I 'node_modules'
-          tree src/Moryx.Resources.Web -I 'node_modules'
-
       - uses: actions/cache@v4
         id: cache-nuget
         with:
@@ -55,11 +50,6 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
-
-      - name: Debug
-        run: |
-          tree src/Moryx.Products.Web -I 'node_modules'
-          tree src/Moryx.Resources.Web -I 'node_modules'
 
       - name: 🔧 Setup nuget
         uses: nuget/setup-nuget@v1
@@ -81,48 +71,23 @@ jobs:
           registry-user: ${{ secrets.myget_user }}
           registry-pass: ${{ secrets.myget_pass }}
 
-      - name: Debug
-        run: |
-          tree src/Moryx.Products.Web -I 'node_modules'
-          tree src/Moryx.Resources.Web -I 'node_modules'
-
       - name: ⬇️ Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: build
           path: artifacts/build
 
-      - name: Debug
-        run: |
-          tree artifacts
-          tree src/Moryx.Products.Web -I 'node_modules'
-          tree src/Moryx.Resources.Web -I 'node_modules'
-
       - name: ⬇️ Download licensed artifacts
         uses: actions/download-artifact@v4
         with:
           name: licensing
 
-      - name: Debug
-        run: |
-          tree src/Moryx.Products.Web -I 'node_modules'
-          tree src/Moryx.Resources.Web -I 'node_modules'
-
       - name: Unzip licensed artifacts
         run: 7z x -o${{ inputs.artifacts_dir == '' && 'artifacts/Licensing/' || inputs.artifacts_dir }} licensing.zip
-
-      - name: ♺ Execute nuget restore
-        run: nuget restore
           
       - name: 🧰 Setup BuildToolkit
         uses: moryx-industry/setup-buildtoolkit@fix/pack-artifacts
 
-      - name: Debug
-        run: |
-          tree artifacts
-          tree src/Moryx.Products.Web -I 'node_modules'
-          tree src/Moryx.Resources.Web -I 'node_modules'
-      
       - name: 📦 Create Packages and 🚚 deliver
         run: |
           .\set-version.ps1 -RefName ${{ github.ref_name }} -IsTag ${{ github.ref_type == 'tag' && 1 || 0 }} -BuildNumber ${{ github.run_number }} -CommitHash ${{ github.sha }}
