@@ -71,7 +71,10 @@ jobs:
           registry-user: ${{ secrets.myget_user }}
           registry-pass: ${{ secrets.myget_pass }}
 
-
+      - name: Debug
+        run: |
+          tree src/Moryx.Products.Web -I 'node_modules'
+          tree src/Moryx.Resources.Web -I 'node_modules'
 
       - name: ⬇️ Download build artifacts
         uses: actions/download-artifact@v4
@@ -79,10 +82,20 @@ jobs:
           name: build
           path: artifacts/build
 
+      - name: Debug
+        run: |
+          tree src/Moryx.Products.Web -I 'node_modules'
+          tree src/Moryx.Resources.Web -I 'node_modules'
+
       - name: ⬇️ Download licensed artifacts
         uses: actions/download-artifact@v4
         with:
           name: licensing
+
+      - name: Debug
+        run: |
+          tree src/Moryx.Products.Web -I 'node_modules'
+          tree src/Moryx.Resources.Web -I 'node_modules'
 
       - name: Unzip licensed artifacts
         run: 7z x -o${{ inputs.artifacts_dir == '' && 'artifacts/Licensing/' || inputs.artifacts_dir }} licensing.zip
@@ -92,6 +105,11 @@ jobs:
           
       - name: 🧰 Setup BuildToolkit
         uses: moryx-industry/setup-buildtoolkit@fix/pack-artifacts
+
+      - name: Debug
+        run: |
+          tree src/Moryx.Products.Web -I 'node_modules'
+          tree src/Moryx.Resources.Web -I 'node_modules'
       
       - name: 📦 Create Packages and 🚚 deliver
         run: |
