@@ -43,6 +43,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug
+        run: |
+          tree src/Moryx.Products.Web -I 'node_modules'
+          tree src/Moryx.Resources.Web -I 'node_modules'
+
       - uses: actions/cache@v4
         id: cache-nuget
         with:
@@ -50,6 +55,11 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+
+      - name: Debug
+        run: |
+          tree src/Moryx.Products.Web -I 'node_modules'
+          tree src/Moryx.Resources.Web -I 'node_modules'
 
       - name: 🔧 Setup nuget
         uses: nuget/setup-nuget@v1
