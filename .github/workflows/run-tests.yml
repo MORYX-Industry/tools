@@ -28,6 +28,7 @@ on:
     secrets:
       npm_auth_token:
         required: false
+      # These can be removed, but would introduce a breaking change
       myget_auth_token:
         required: false
       myget_user:
@@ -60,14 +61,6 @@ jobs:
       - name: 🗝️ Authenticate npm registry
         run: npm config set ${{ inputs.npm_package_source }}:_authToken ${{ secrets.npm_auth_token }}
         if: inputs.npm_package_source != ''
-
-      - name: "🗝️ Authenticate MyGet"
-        uses: moryx-industry/nuget-setapikey@v1
-        with:
-          sources-file: './myget.feeds'
-          api-key: ${{ secrets.myget_auth_token }}
-          registry-user: ${{ secrets.myget_user }}
-          registry-pass: ${{ secrets.myget_pass }}
 
       - name: ♺ Execute nuget restore
         run: nuget restore
