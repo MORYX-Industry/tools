@@ -55,15 +55,16 @@ jobs:
         with:
           dotnet-version: ${{ inputs.dotnet_sdk_version }}
 
-      - name: 🗝️ Authenticate npm registry
-        run: npm config set ${{ inputs.npm_package_source }}:_authToken ${{ secrets.npm_auth_token }}
-        if: inputs.npm_package_source != ''
+      - name: 🧰 Setup BuildToolkit
+        uses: moryx-industry/setup-buildtoolkit@v1
+
+      - name: 📥 Update Package Sources
+        run: |
+          .\update-package-sources.ps1 -MoryxNpmSource ${{ inputs.npm_package_source }}
+        shell: pwsh
 
       - name: ♺ Execute nuget restore
         run: dotnet restore
-
-      - name: 🧰 Setup BuildToolkit
-        uses: moryx-industry/setup-buildtoolkit@v1
 
       - name: 🧪 Run tests
         run: |
