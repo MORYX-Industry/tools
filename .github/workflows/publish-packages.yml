@@ -52,9 +52,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: 🔧 Setup nuget
-        uses: nuget/setup-nuget@v1
-
       - name: 🔧 Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:

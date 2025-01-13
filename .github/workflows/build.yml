@@ -67,15 +67,12 @@ jobs:
         with:
           dotnet-version: ${{ inputs.dotnet_sdk_version }}
 
-      - name: 🔧 Setup nuget
-        uses: nuget/setup-nuget@v1
-
       - name: 🗝️ Authenticate npm registry
         run: npm config set ${{ inputs.NPM_PACKAGE_SOURCE }}:_authToken ${{ secrets.npm_auth_token }}
         if: inputs.NPM_PACKAGE_SOURCE != ''
 
       - name: ♺ Execute nuget restore
-        run: nuget restore
+        run: dotnet restore
         if: steps.cache-nuget.outputs.cache-hit != 'true'
 
       - name: 🧰 Setup BuildToolkit
