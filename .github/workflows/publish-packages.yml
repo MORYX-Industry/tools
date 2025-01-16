@@ -52,18 +52,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: 🔧 Setup nuget
-        uses: nuget/setup-nuget@v1
-
       - name: 🔧 Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ inputs.dotnet_sdk_version }}
       
-      - name: 🗝️ Authenticate npm registry
-        run: npm config set ${{ inputs.npm_package_source }}:_authToken ${{ secrets.npm_auth_token }}
-        if: inputs.npm_package_source != ''
-
       - name: ⬇️ Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -80,6 +73,11 @@ jobs:
           
       - name: 🧰 Setup BuildToolkit
         uses: moryx-industry/setup-buildtoolkit@v1        
+      
+      - name: 📥 Update Package Sources
+        run: |
+          .\update-package-sources.ps1 -MoryxNpmSource ${{ inputs.npm_package_source }}
+        shell: pwsh
       
       - name: 📦 Create Packages and 🚚 deliver
         run: |
