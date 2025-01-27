@@ -10,10 +10,24 @@ jobs:
       - name: Checkout code 
         uses: actions/checkout@v4
       
+      - name: Check for global.json
+        id: check-global-json
+        run: |
+          if [ -f global.json ]; then
+            echo "global_json_exists=true" >> $GITHUB_ENV
+          else
+            echo "global_json_exists=false" >> $GITHUB_ENV
+          fi
+
       - name: 🔧 Setup .NET SDK
+        if: env.global_json_exists == 'true'
         uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json 
+    
+      - name: Setup .NET without global.json
+        if: env.global_json_exists == 'false'
+        uses: actions/setup-dotnet@v4
 
       - name: Download test results
         uses: actions/download-artifact@v4
