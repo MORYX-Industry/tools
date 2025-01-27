@@ -29,6 +29,14 @@ jobs:
         if: env.global_json_exists == 'false'
         uses: actions/setup-dotnet@v4
 
+      - name: 🧰 Setup BuildToolkit
+        uses: moryx-industry/setup-buildtoolkit@v1
+
+      - name: 📥 Update Package Sources
+        run: |
+          .\update-package-sources.ps1
+        shell: pwsh
+        
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
