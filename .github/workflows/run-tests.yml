@@ -43,6 +43,8 @@ jobs:
       MORYX_COMMERCIAL_BUILD: ${{ inputs.MORYX_COMMERCIAL_BUILD }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: 🔧 Setup Node
         uses: actions/setup-node@v4
